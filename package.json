@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "build:docker": "docker compose build",
+    "start": "node server.mjs",
+    "start:docker": "docker compose -f docker-compose.yml up",
+    "serve": "node --watch server.mjs",
+    "serve:docker": "docker compose -f docker-compose.dev.yml up"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}

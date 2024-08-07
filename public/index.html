@@ -1,0 +1,133 @@
+<style type="text/css">
+  html,
+  body {
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    cursor: none;
+  }
+
+  #app {
+    position: relative;
+    background: black;
+    width: 720px;
+    height: 720px;
+  }
+
+  #chart {
+    top: 120px;
+  }
+
+  #tx,
+  #rx {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-family: Helvetica;
+    font-size: 12px;
+    color: rgb(255, 255, 255, 0.75);
+  }
+
+  #rx {
+    top: 24px;
+  }
+
+  #tx-value,
+  #rx-value {
+    font-weight: bold;
+    color: rgb(0, 100, 255, 0.75);
+  }
+</style>
+
+<div id="app">
+  <canvas
+    id="chart"
+    width="720"
+    height="480"
+  ></canvas>
+
+  <div id="tx">⇧ <span id="tx-value"></span> Mbps</div>
+  <div id="rx">⇩ <span id="rx-value"></span> Mbps</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script
+  type="text/javascript"
+  src="/socket.io/socket.io.js"
+></script>
+<script type="text/javascript">
+  const canvas = document.getElementById('chart');
+  const ctx = canvas.getContext('2d');
+
+  // Create a linear gradient
+  const gradient_rx = ctx.createLinearGradient(0, 0, 0, 360);
+  gradient_rx.addColorStop(0, 'rgba(0, 100, 255, 0.8)');
+  gradient_rx.addColorStop(0.95, 'rgba(0, 100, 255, 0.4)');
+
+  const gradient_tx = ctx.createLinearGradient(0, 360, 0, 720);
+  gradient_tx.addColorStop(0, 'rgba(0, 100, 255, 0.4)');
+  gradient_tx.addColorStop(0.95, 'rgba(0, 100, 255, 0.8)');
+
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: new Array(100).fill(''),
+      datasets: [
+        {
+          label: 'tx',
+          data: new Array(100).fill(0),
+          borderWidth: 1,
+          fill: true,
+          tension: 0.4,
+          backgroundColor: gradient_tx,
+        },
+        {
+          label: 'rx',
+          data: new Array(100).fill(0),
+          borderWidth: 1,
+          fill: true,
+          tension: 0.4,
+          backgroundColor: gradient_rx,
+        },
+      ]
+    },
+    options: {
+      scaleBeginAtZero: true,
+      animation: false,
+      elements: {
+        point: {
+          radius: 0,
+        }
+      },
+      scales: {
+        y: {
+          display: false,
+          min: -1000,
+          max: 1000,
+        }
+      },
+      plugins: {
+        legend: {
+          display: false
+        }
+      }
+    }
+  });
+
+  const socket = io();
+  socket.on('stats', ({
+    rxSpeed,
+    txSpeed,
+  }) => {
+    chart.data.datasets[0].data.push(-txSpeed);
+    chart.data.datasets[0].data.shift();
+
+    chart.data.datasets[1].data.push(rxSpeed);
+    chart.data.datasets[1].data.shift();
+
+    document.getElementById('tx-value').innerText = txSpeed.toFixed(2);
+    document.getElementById('rx-value').innerText = rxSpeed.toFixed(2);
+
+    chart.update();
+  });
+</script>

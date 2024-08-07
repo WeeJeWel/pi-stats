@@ -1,0 +1,6 @@
+services:
+  pi-stats:
+    build: .
+    container_name: pi-stats
+    hostname: pi-stats
+    network_mode: host
