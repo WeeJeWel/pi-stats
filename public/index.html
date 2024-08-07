@@ -305,7 +305,6 @@
   socket.on('cpu', ({
     percentage,
   }) => {
-    console.log(percentage);
     document.getElementById('bar-cpu-inner').style.width = `${percentage}%`;
     document.getElementById('bar-cpu-label').innerText = `${percentage}%`;
   });
