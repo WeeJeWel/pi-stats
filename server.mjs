@@ -1,9 +1,12 @@
+import os from 'os';
 import fs from 'fs';
 import http from 'http';
+import { exec } from 'child_process';
 import { EventEmitter } from 'events';
 
 import express from 'express';
 import { Server as SocketIOServer } from 'socket.io';
+import osUtils from 'node-os-utils';
 
 const PORT = process.env.PORT || 3000;
 
@@ -19,18 +22,38 @@ class Server {
     });
 
     this.io = new SocketIOServer(this.server);
+    this.io.on('connection', () => {
+      this.networkMonitor.logNetworkStats();
+      this.storageMonitor.logStorageStats();
+      this.systemMonitor.logSystemStats();
+    });
 
-    this.ethernetMonitor = new EthernetMonitor('eth0', 1000 / 60); // 60fps
-    this.ethernetMonitor.start();
-    this.ethernetMonitor.on('stats', ({ rxSpeed, txSpeed }) => {
+    this.networkMonitor = new NetworkMonitor('eth0', 1000 / 60); // 60fps
+    this.networkMonitor.start();
+    this.networkMonitor.on('stats', ({ rxSpeed, txSpeed }) => {
       // console.log(`RX Speed: ${rxSpeed.toFixed(2)} Mbps | TX Speed: ${txSpeed.toFixed(2)} Mbps`);
-      this.io.emit('stats', { rxSpeed, txSpeed });
+      this.io.emit('network', { rxSpeed, txSpeed });
+    });
+
+    this.storageMonitor = new StorageMonitor();
+    this.storageMonitor.start();
+    this.storageMonitor.on('stats', ({ disks }) => {
+      this.io.emit('storage', { disks });
+    });
+
+    this.systemMonitor = new SystemMonitor();
+    this.systemMonitor.start();
+    this.systemMonitor.on('cpu', ({ percentage }) => {
+      this.io.emit('cpu', { percentage });
+    });
+    this.systemMonitor.on('mem', ({ total, used, percentage }) => {
+      this.io.emit('mem', { total, used, percentage });
     });
   }
 
 }
 
-class EthernetMonitor extends EventEmitter {
+class NetworkMonitor extends EventEmitter {
   constructor(interfaceName, intervalMs = 100) {
     super();
     this.interfaceName = interfaceName;
@@ -67,7 +90,7 @@ class EthernetMonitor extends EventEmitter {
   }
 
   // Method to calculate and emit network speed events
-  async logNetworkSpeed() {
+  async logNetworkStats() {
     try {
       const currentStats = await this.readNetworkStats();
       const iface = this.interfaceName;
@@ -96,8 +119,7 @@ class EthernetMonitor extends EventEmitter {
   // Method to start monitoring
   start() {
     if (!this.intervalId) {
-      this.intervalId = setInterval(() => this.logNetworkSpeed(), this.intervalMs);
-      console.log(`Started monitoring ${this.interfaceName} every ${this.intervalMs}ms.`);
+      this.intervalId = setInterval(() => this.logNetworkStats(), this.intervalMs);
     }
   }
 
@@ -106,9 +128,97 @@ class EthernetMonitor extends EventEmitter {
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
-      console.log(`Stopped monitoring ${this.interfaceName}.`);
     }
   }
 }
 
-const server = new Server();
+class StorageMonitor extends EventEmitter {
+
+  constructor() {
+    super();
+
+    this.intervalId = null;
+    this.intervalMs = 1000 * 60;
+  }
+
+  // Method to start monitoring
+  start() {
+    if (!this.intervalId) {
+      this.intervalId = setInterval(() => this.logStorageStats(), this.intervalMs);
+    }
+  }
+
+  // Method to stop monitoring
+  stop() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+  }
+
+  logStorageStats() {
+    Promise.resolve().then(async () => {
+      const disks = await new Promise((resolve, reject) => {
+        exec('df -h', (err, stdout, stderr) => {
+          if (err) {
+            return reject(err);
+          }
+          const lines = stdout.trim().split('\n');
+          const headers = lines[0].split(/\s+/);
+          const disks = lines.slice(1).map(line => {
+            const parts = line.split(/\s+/);
+            return {
+              filesystem: parts[0],
+              size: parts[1],
+              used: parts[2],
+              available: parts[3],
+              usePercent: parts[4],
+              mountedOn: parts[5]
+            };
+          });
+          resolve(disks);
+        });
+      });
+
+      this.emit('stats', { disks });
+    });
+  }
+
+}
+
+class SystemMonitor extends EventEmitter {
+  constructor() {
+    super();
+    this.intervalId = null;
+    this.intervalMs = 1000;
+  }
+
+  start() {
+    if (!this.intervalId) {
+      this.intervalId = setInterval(() => this.logSystemStats(), this.intervalMs);
+    }
+  }
+
+  stop() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+  }
+
+  logSystemStats() {
+    osUtils.cpu.usage(this.intervalMs).then(percentage => {
+      this.emit('cpu', { percentage });
+    });
+
+    osUtils.mem.info().then(info => {
+      this.emit('mem', {
+        total: info.totalMemMb,
+        used: info.usedMemMb,
+        percentage: info.usedMemPercentage,
+      });
+    });
+  }
+}
+
+export default new Server();
