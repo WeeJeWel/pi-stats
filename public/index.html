@@ -53,10 +53,9 @@
 
   #network-chart {
     width: 720px;
-    /* height: 450px; */
   }
 
-  /* CPUs */
+  /* Bars */
   #bars {
     position: absolute;
     top: 30px;
@@ -139,7 +138,7 @@
     <canvas
       id="network-chart"
       width="720"
-      height="500"
+      height="400"
     ></canvas>
   </div>
 
@@ -207,6 +206,39 @@
         ></div>
       </div>
     </div>
+
+    <!-- CPU Temperature -->
+    <div class="bar">
+      <i class="bar-icon fa-solid fa-temperature-three-quarters"></i>
+      <div class="bar-label">Temp</div>
+      <div class="bar-usage">
+        <div
+          id="bar-temperature-inner"
+          class="bar-usage-inner"
+        ></div>
+        <div
+          id="bar-temperature-label"
+          class="bar-usage-label"
+        ></div>
+      </div>
+    </div>
+
+    <!-- CPU Frequency -->
+    <div class="bar">
+      <i class="bar-icon fa-solid fa-gauge"></i>
+      <div class="bar-label">Freq</div>
+      <div class="bar-usage">
+        <div
+          id="bar-frequency-inner"
+          class="bar-usage-inner"
+        ></div>
+        <div
+          id="bar-frequency-label"
+          class="bar-usage-label"
+        ></div>
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -323,6 +355,21 @@
   }) => {
     document.getElementById('bar-mem-inner').style.width = `${percentage}%`;
     document.getElementById('bar-mem-label').innerText = `${Number(used / 1024).toFixed(1)} GB`;
+  });
+
+  socket.on('temperature', ({
+    temperature,
+  }) => {
+    console.log(temperature)
+    document.getElementById('bar-temperature-inner').style.width = `${temperature}%`;
+    document.getElementById('bar-temperature-label').innerText = `${temperature.toFixed(1)} ℃`;
+  });
+
+  socket.on('frequency', ({
+    frequency,
+  }) => {
+    document.getElementById('bar-frequency-inner').style.width = `${frequency / 24000000}%`;
+    document.getElementById('bar-frequency-label').innerText = `${(frequency / 1000000000).toFixed(2)} GHz`;
   });
 
   document.getElementById('app').addEventListener('click', () => {

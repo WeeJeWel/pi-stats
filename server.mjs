@@ -1,4 +1,3 @@
-import os from 'os';
 import fs from 'fs';
 import http from 'http';
 import { exec } from 'child_process';
@@ -48,6 +47,12 @@ class Server {
     });
     this.systemMonitor.on('mem', ({ total, used, percentage }) => {
       this.io.emit('mem', { total, used, percentage });
+    });
+    this.systemMonitor.on('temperature', ({ temperature }) => {
+      this.io.emit('temperature', { temperature });
+    });
+    this.systemMonitor.on('frequency', ({ frequency }) => {
+      this.io.emit('frequency', { frequency });
     });
   }
 
@@ -217,6 +222,26 @@ class SystemMonitor extends EventEmitter {
         used: info.usedMemMb,
         percentage: info.usedMemPercentage,
       });
+    });
+
+    exec('vcgencmd measure_temp', (err, stdout, stderr) => {
+      if (err) {
+        console.error(`Error getting CPU temperature: ${err}`);
+        return;
+      }
+
+      const temperature = parseFloat(stdout.split('=')[1]); // in Celsius
+      this.emit('temperature', { temperature });
+    });
+
+    exec('vcgencmd measure_clock arm', (err, stdout, stderr) => {
+      if (err) {
+        console.error(`Error getting CPU frequency: ${err}`);
+        return;
+      }
+
+      const frequency = parseFloat(stdout.split('=')[1]); // in Hz
+      this.emit('frequency', { frequency });
     });
   }
 }

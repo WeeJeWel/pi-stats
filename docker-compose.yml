@@ -3,5 +3,8 @@ services:
     build: .
     container_name: pi-stats
     hostname: pi-stats
-    network_mode: host
     restart: unless-stopped
+    volumes:
+      - /usr/bin/vcgencmd:/usr/bin/vcgencmd
+    privileged: true
+    network_mode: host

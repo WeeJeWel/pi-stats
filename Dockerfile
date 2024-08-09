@@ -1,4 +1,4 @@
-FROM node:lts-alpine
+FROM node:lts
 
 RUN mkdir -p /app
 COPY ./server.mjs /app/
