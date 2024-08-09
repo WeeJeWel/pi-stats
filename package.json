@@ -3,8 +3,10 @@
     "build:docker": "docker compose build",
     "start": "node server.mjs",
     "start:docker": "docker compose -f docker-compose.yml up",
+    "start:docker:detach": "docker compose -f docker-compose.yml up --detach",
     "serve": "node --watch server.mjs",
-    "serve:docker": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up"
+    "serve:docker": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up",
+    "serve:docker:detach": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up --detach"
   },
   "dependencies": {
     "express": "^4.19.2",
