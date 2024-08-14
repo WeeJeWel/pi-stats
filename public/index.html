@@ -1,379 +1,392 @@
-<meta
-  name="viewport"
-  content="width=710, initial-scale=1, user-scalable=no"
-/>
+<html>
 
-<style type="text/css">
-  :root {
-    --color-blue: #0077ff;
-    --color-white: #fff;
-  }
+<head>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
 
-  html,
-  body {
-    padding: 0;
-    margin: 0;
-    overflow: hidden;
-    cursor: none;
-
-    font-family: Helvetica;
-    font-weight: bold;
-    font-size: 24px;
-
-    background-color: black;
-  }
-
-  #app {
-    position: relative;
-    background: black;
-    width: 710px;
-    height: 720px;
-  }
-
-  /* Network */
-  #network {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-  }
-
-  #network-tx,
-  #network-rx {
-    color: var(--color-blue);
-    margin-bottom: 6px;
-    margin-left: 12px;
-  }
-
-  #network-tx-value,
-  #network-rx-value {
-    font-weight: bold;
-    color: white;
-  }
-
-  #network-chart {
-    width: 720px;
-  }
-
-  /* Bars */
-  #bars {
-    position: absolute;
-    top: 30px;
-    left: 10px;
-    right: 10px;
-
-    display: grid;
-    grid-template-columns: calc(50% - 10px) calc(50% - 10px);
-    grid-row: auto auto;
-    grid-column-gap: 10px;
-    grid-row-gap: 10px;
-  }
-
-  .bar {
-    position: relative;
-    display: flex;
-    align-items: center;
-    height: 40px;
-  }
-
-  .bar>.bar-icon {
-    position: absolute;
-    z-index: 2;
-    left: 6px;
-    color: var(--color-white);
-  }
-
-  .bar>.bar-label {
-    position: absolute;
-    z-index: 2;
-    top: 0px;
-    left: 40px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    color: var(--color-white);
-    line-height: 40px;
-    width: 50px;
-    white-space: nowrap;
-  }
-
-  .bar>.bar-usage {
-    position: absolute;
-    left: 0;
-    right: 0;
-    flex-grow: 1;
-    height: 40px;
-    border-radius: 8px;
-    background: #222;
-    overflow: hidden;
-  }
-
-  .bar>.bar-usage>.bar-usage-inner {
-    width: 0;
-    height: 100%;
-    background: linear-gradient(to right, #004ca3, #0077ff);
-    border-radius: 8px;
-
-    transition: width 1s;
-  }
-
-  .bar>.bar-usage>.bar-usage-label {
-    position: absolute;
-    z-index: 2;
-    right: 12px;
-    top: 0px;
-    color: var(--color-white);
-    line-height: 40px;
-    opacity: 0.5;
-  }
-</style>
-<script
-  src="https://kit.fontawesome.com/e21eefa74e.js"
-  crossorigin="anonymous"
-></script>
-
-<div id="app">
-  <div id="network">
-    <div id="network-tx"><i class="fa-solid fa-arrow-up"></i> <span id="network-tx-value"></span> Mbps</div>
-    <div id="network-rx"><i class="fa-solid fa-arrow-down"></i> <span id="network-rx-value"></span> Mbps</div>
-
-    <canvas
-      id="network-chart"
-      width="720"
-      height="400"
-    ></canvas>
-  </div>
-
-  <div id="bars">
-    <!-- CPU -->
-    <div class="bar">
-      <i class="bar-icon fa-solid fa-microchip"></i>
-      <div class="bar-label">CPU</div>
-      <div class="bar-usage">
-        <div
-          id="bar-cpu-inner"
-          class="bar-usage-inner"
-        ></div>
-        <div
-          id="bar-cpu-label"
-          class="bar-usage-label"
-        ></div>
-      </div>
-    </div>
-
-    <!-- RAM -->
-    <div class="bar">
-      <i class="bar-icon fa-solid fa-memory"></i>
-      <div class="bar-label">RAM</div>
-      <div class="bar-usage">
-        <div
-          id="bar-mem-inner"
-          class="bar-usage-inner"
-        ></div>
-        <div
-          id="bar-mem-label"
-          class="bar-usage-label"
-        ></div>
-      </div>
-    </div>
-
-    <!-- Disk 0 -->
-    <div class="bar">
-      <i class="bar-icon fa-solid fa-hard-drive"></i>
-      <div class="bar-label">Disk 0</div>
-      <div class="bar-usage">
-        <div
-          id="bar-nvme0-inner"
-          class="bar-usage-inner"
-        ></div>
-        <div
-          id="bar-nvme0-label"
-          class="bar-usage-label"
-        ></div>
-      </div>
-    </div>
-
-    <!-- Disk 1 -->
-    <div class="bar">
-      <i class="bar-icon fa-solid fa-hard-drive"></i>
-      <div class="bar-label">Disk 1</div>
-      <div class="bar-usage">
-        <div
-          id="bar-nvme1-inner"
-          class="bar-usage-inner"
-        ></div>
-        <div
-          id="bar-nvme1-label"
-          class="bar-usage-label"
-        ></div>
-      </div>
-    </div>
-
-    <!-- CPU Temperature -->
-    <div class="bar">
-      <i class="bar-icon fa-solid fa-temperature-three-quarters"></i>
-      <div class="bar-label">Temp</div>
-      <div class="bar-usage">
-        <div
-          id="bar-temperature-inner"
-          class="bar-usage-inner"
-        ></div>
-        <div
-          id="bar-temperature-label"
-          class="bar-usage-label"
-        ></div>
-      </div>
-    </div>
-
-    <!-- CPU Frequency -->
-    <div class="bar">
-      <i class="bar-icon fa-solid fa-gauge"></i>
-      <div class="bar-label">Freq</div>
-      <div class="bar-usage">
-        <div
-          id="bar-frequency-inner"
-          class="bar-usage-inner"
-        ></div>
-        <div
-          id="bar-frequency-label"
-          class="bar-usage-label"
-        ></div>
-      </div>
-    </div>
-
-  </div>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script
-  type="text/javascript"
-  src="/socket.io/socket.io.js"
-></script>
-<script type="text/javascript">
-  const canvas = document.getElementById('network-chart');
-  const ctx = canvas.getContext('2d');
-
-  const gradient_tx = ctx.createLinearGradient(0, 360, 0, 720);
-  gradient_tx.addColorStop(0, 'rgba(0, 100, 255, 0.2)');
-  gradient_tx.addColorStop(0.95, 'rgba(0, 100, 255, 0.8)');
-
-  const gradient_rx = ctx.createLinearGradient(0, 0, 0, 360);
-  gradient_rx.addColorStop(0, 'rgba(0, 100, 255, 0.8)');
-  gradient_rx.addColorStop(0.95, 'rgba(0, 100, 255, 0.2)');
-
-  const chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: new Array(100).fill(''),
-      datasets: [
-        {
-          label: 'tx',
-          data: new Array(100).fill(0),
-          borderWidth: 1,
-          borderColor: 'rgba(0, 100, 255, 0.8)',
-          backgroundColor: gradient_rx,
-          fill: true,
-          tension: 0.4,
-        },
-        {
-          label: 'rx',
-          data: new Array(100).fill(0),
-          borderWidth: 1,
-          borderColor: 'rgba(0, 100, 255, 0.8)',
-          backgroundColor: gradient_tx,
-          fill: true,
-          tension: 0.4,
-        },
-      ]
-    },
-    options: {
-      scaleBeginAtZero: true,
-      animation: false,
-      elements: {
-        point: {
-          radius: 0,
-        }
-      },
-      scales: {
-        y: {
-          display: false,
-          min: 0,
-          max: 1000,
-          suggestedMax: 100,
-        }
-      },
-      plugins: {
-        legend: {
-          display: false
-        }
-      }
+  <style type="text/css">
+    :root {
+      --color-blue: #0077ff;
+      --color-white: #fff;
     }
-  });
 
-  const socket = io();
-  socket.on('network', ({
-    rxSpeed,
-    txSpeed,
-  }) => {
-    chart.data.datasets[0].data.push(txSpeed);
-    chart.data.datasets[0].data.shift();
+    html,
+    body {
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+      cursor: none;
 
-    chart.data.datasets[1].data.push(rxSpeed);
-    chart.data.datasets[1].data.shift();
+      font-family: Helvetica;
+      font-weight: bold;
+      font-size: 24px;
 
-    document.getElementById('network-tx-value').innerText = txSpeed.toFixed(2);
-    document.getElementById('network-rx-value').innerText = rxSpeed.toFixed(2);
+      background-color: black;
+    }
 
-    chart.update();
-  });
+    #app {
+      position: relative;
+      background: black;
+      width: 720px;
+      height: 720px;
+    }
 
-  socket.on('storage', ({
-    disks,
-  }) => {
-    disks.forEach(disk => {
-      if (disk.filesystem.startsWith('/dev/nvme0')) {
-        document.getElementById('bar-nvme0-inner').style.width = `${disk.usePercent}`;
-        document.getElementById('bar-nvme0-label').innerText = `${disk.used} / ${disk.size}`;
-      }
+    /* Network */
+    #network {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
 
-      if (disk.filesystem.startsWith('/dev/nvme1')) {
-        document.getElementById('bar-nvme1-inner').style.width = `${disk.usePercent}`;
-        document.getElementById('bar-nvme1-label').innerText = `${disk.used} / ${disk.size}`;
+    #network-tx,
+    #network-rx {
+      color: var(--color-blue);
+      margin-bottom: 6px;
+      margin-left: 12px;
+    }
+
+    #network-tx-value,
+    #network-rx-value {
+      font-weight: bold;
+      color: white;
+    }
+
+    #network-chart {
+      width: 720px;
+    }
+
+    /* Bars */
+    #bars {
+      position: absolute;
+      top: 30px;
+      left: 10px;
+      right: 10px;
+
+      display: grid;
+      grid-template-columns: calc(50% - 10px) calc(50% - 10px);
+      grid-row: auto auto;
+      grid-column-gap: 10px;
+      grid-row-gap: 10px;
+    }
+
+    .bar {
+      position: relative;
+      display: flex;
+      align-items: center;
+      height: 40px;
+    }
+
+    .bar>.bar-icon {
+      position: absolute;
+      z-index: 2;
+      left: 6px;
+      color: var(--color-white);
+    }
+
+    .bar>.bar-label {
+      position: absolute;
+      z-index: 2;
+      top: 0px;
+      left: 40px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      color: var(--color-white);
+      line-height: 40px;
+      width: 50px;
+      white-space: nowrap;
+    }
+
+    .bar>.bar-usage {
+      position: absolute;
+      left: 0;
+      right: 0;
+      flex-grow: 1;
+      height: 40px;
+      border-radius: 8px;
+      background: #222;
+      overflow: hidden;
+    }
+
+    .bar>.bar-usage>.bar-usage-inner {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(to right, #004ca3, #0077ff);
+      border-radius: 8px;
+
+      transition: width 1s;
+    }
+
+    .bar>.bar-usage>.bar-usage-label {
+      position: absolute;
+      z-index: 2;
+      right: 12px;
+      top: 0px;
+      color: var(--color-white);
+      line-height: 40px;
+      opacity: 0.5;
+    }
+  </style>
+  <script
+    src="https://kit.fontawesome.com/e21eefa74e.js"
+    crossorigin="anonymous"
+  ></script>
+</head>
+
+<body>
+
+  <div id="app">
+    <div id="network">
+      <div id="network-tx"><i class="fa-solid fa-arrow-up"></i> <span id="network-tx-value"></span> Mbps</div>
+      <div id="network-rx"><i class="fa-solid fa-arrow-down"></i> <span id="network-rx-value"></span> Mbps</div>
+
+      <canvas
+        id="network-chart"
+        width="720"
+        height="400"
+      ></canvas>
+    </div>
+
+    <div id="bars">
+      <!-- CPU -->
+      <div class="bar">
+        <i class="bar-icon fa-solid fa-microchip"></i>
+        <div class="bar-label">CPU</div>
+        <div class="bar-usage">
+          <div
+            id="bar-cpu-inner"
+            class="bar-usage-inner"
+          ></div>
+          <div
+            id="bar-cpu-label"
+            class="bar-usage-label"
+          ></div>
+        </div>
+      </div>
+
+      <!-- RAM -->
+      <div class="bar">
+        <i class="bar-icon fa-solid fa-memory"></i>
+        <div class="bar-label">RAM</div>
+        <div class="bar-usage">
+          <div
+            id="bar-mem-inner"
+            class="bar-usage-inner"
+          ></div>
+          <div
+            id="bar-mem-label"
+            class="bar-usage-label"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Disk 0 -->
+      <div class="bar">
+        <i class="bar-icon fa-solid fa-hard-drive"></i>
+        <div class="bar-label">Disk 0</div>
+        <div class="bar-usage">
+          <div
+            id="bar-nvme0-inner"
+            class="bar-usage-inner"
+          ></div>
+          <div
+            id="bar-nvme0-label"
+            class="bar-usage-label"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Disk 1 -->
+      <div class="bar">
+        <i class="bar-icon fa-solid fa-hard-drive"></i>
+        <div class="bar-label">Disk 1</div>
+        <div class="bar-usage">
+          <div
+            id="bar-nvme1-inner"
+            class="bar-usage-inner"
+          ></div>
+          <div
+            id="bar-nvme1-label"
+            class="bar-usage-label"
+          ></div>
+        </div>
+      </div>
+
+      <!-- CPU Temperature -->
+      <div class="bar">
+        <i class="bar-icon fa-solid fa-temperature-three-quarters"></i>
+        <div class="bar-label">Temp</div>
+        <div class="bar-usage">
+          <div
+            id="bar-temperature-inner"
+            class="bar-usage-inner"
+          ></div>
+          <div
+            id="bar-temperature-label"
+            class="bar-usage-label"
+          ></div>
+        </div>
+      </div>
+
+      <!-- CPU Frequency -->
+      <div class="bar">
+        <i class="bar-icon fa-solid fa-gauge"></i>
+        <div class="bar-label">Freq</div>
+        <div class="bar-usage">
+          <div
+            id="bar-frequency-inner"
+            class="bar-usage-inner"
+          ></div>
+          <div
+            id="bar-frequency-label"
+            class="bar-usage-label"
+          ></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script
+    type="text/javascript"
+    src="/socket.io/socket.io.js"
+  ></script>
+  <script type="text/javascript">
+    const meta = document.createElement('meta');
+    meta.name = 'viewport';
+    meta.content = `width=720, initial-scale=${window.innerWidth / 720}`;
+    document.head.appendChild(meta);
+
+    const canvas = document.getElementById('network-chart');
+    const ctx = canvas.getContext('2d');
+
+    const gradient_tx = ctx.createLinearGradient(0, 360, 0, 720);
+    gradient_tx.addColorStop(0, 'rgba(0, 100, 255, 0.2)');
+    gradient_tx.addColorStop(0.95, 'rgba(0, 100, 255, 0.8)');
+
+    const gradient_rx = ctx.createLinearGradient(0, 0, 0, 360);
+    gradient_rx.addColorStop(0, 'rgba(0, 100, 255, 0.8)');
+    gradient_rx.addColorStop(0.95, 'rgba(0, 100, 255, 0.2)');
+
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: new Array(100).fill(''),
+        datasets: [
+          {
+            label: 'tx',
+            data: new Array(100).fill(0),
+            borderWidth: 1,
+            borderColor: 'rgba(0, 100, 255, 0.8)',
+            backgroundColor: gradient_rx,
+            fill: true,
+            tension: 0.4,
+          },
+          {
+            label: 'rx',
+            data: new Array(100).fill(0),
+            borderWidth: 1,
+            borderColor: 'rgba(0, 100, 255, 0.8)',
+            backgroundColor: gradient_tx,
+            fill: true,
+            tension: 0.4,
+          },
+        ]
+      },
+      options: {
+        scaleBeginAtZero: true,
+        animation: false,
+        elements: {
+          point: {
+            radius: 0,
+          }
+        },
+        scales: {
+          y: {
+            display: false,
+            min: 0,
+            max: 1000,
+            suggestedMax: 100,
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          }
+        }
       }
     });
-  });
 
-  socket.on('cpu', ({
-    percentage,
-  }) => {
-    document.getElementById('bar-cpu-inner').style.width = `${percentage}%`;
-    document.getElementById('bar-cpu-label').innerText = `${percentage}%`;
-  });
+    const socket = io();
+    socket.on('network', ({
+      rxSpeed,
+      txSpeed,
+    }) => {
+      chart.data.datasets[0].data.push(txSpeed);
+      chart.data.datasets[0].data.shift();
 
-  socket.on('mem', ({
-    total,
-    used,
-    percentage,
-  }) => {
-    document.getElementById('bar-mem-inner').style.width = `${percentage}%`;
-    document.getElementById('bar-mem-label').innerText = `${Number(used / 1024).toFixed(1)} GB`;
-  });
+      chart.data.datasets[1].data.push(rxSpeed);
+      chart.data.datasets[1].data.shift();
 
-  socket.on('temperature', ({
-    temperature,
-  }) => {
-    console.log(temperature)
-    document.getElementById('bar-temperature-inner').style.width = `${temperature}%`;
-    document.getElementById('bar-temperature-label').innerText = `${temperature.toFixed(1)} ℃`;
-  });
+      document.getElementById('network-tx-value').innerText = txSpeed.toFixed(2);
+      document.getElementById('network-rx-value').innerText = rxSpeed.toFixed(2);
 
-  socket.on('frequency', ({
-    frequency,
-  }) => {
-    document.getElementById('bar-frequency-inner').style.width = `${frequency / 24000000}%`;
-    document.getElementById('bar-frequency-label').innerText = `${(frequency / 1000000000).toFixed(2)} GHz`;
-  });
+      chart.update();
+    });
 
-  document.getElementById('app').addEventListener('click', () => {
-    window.location.reload();
-  });
-</script>
+    socket.on('storage', ({
+      disks,
+    }) => {
+      disks.forEach(disk => {
+        if (disk.filesystem.startsWith('/dev/nvme0')) {
+          document.getElementById('bar-nvme0-inner').style.width = `${disk.usePercent}`;
+          document.getElementById('bar-nvme0-label').innerText = `${disk.used} / ${disk.size}`;
+        }
+
+        if (disk.filesystem.startsWith('/dev/nvme1')) {
+          document.getElementById('bar-nvme1-inner').style.width = `${disk.usePercent}`;
+          document.getElementById('bar-nvme1-label').innerText = `${disk.used} / ${disk.size}`;
+        }
+      });
+    });
+
+    socket.on('cpu', ({
+      percentage,
+    }) => {
+      document.getElementById('bar-cpu-inner').style.width = `${percentage} % `;
+      document.getElementById('bar-cpu-label').innerText = `${percentage} % `;
+    });
+
+    socket.on('mem', ({
+      total,
+      used,
+      percentage,
+    }) => {
+      document.getElementById('bar-mem-inner').style.width = `${percentage} % `;
+      document.getElementById('bar-mem-label').innerText = `${Number(used / 1024).toFixed(1)} GB`;
+    });
+
+    socket.on('temperature', ({
+      temperature,
+    }) => {
+      document.getElementById('bar-temperature-inner').style.width = `${temperature}% `;
+      document.getElementById('bar-temperature-label').innerText = `${temperature.toFixed(1)} ℃`;
+    });
+
+    socket.on('frequency', ({
+      frequency,
+    }) => {
+      document.getElementById('bar-frequency-inner').style.width = `${frequency / 24000000}% `;
+      document.getElementById('bar-frequency-label').innerText = `${(frequency / 1000000000).toFixed(2)} GHz`;
+    });
+
+    document.getElementById('app').addEventListener('click', () => {
+      window.location.reload();
+    });
+  </script>
+</body>
+
+</html>
