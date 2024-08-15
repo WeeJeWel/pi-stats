@@ -356,8 +356,8 @@
     socket.on('cpu', ({
       percentage,
     }) => {
-      document.getElementById('bar-cpu-inner').style.width = `${percentage} % `;
-      document.getElementById('bar-cpu-label').innerText = `${percentage} % `;
+      document.getElementById('bar-cpu-inner').style.width = `${percentage}%`;
+      document.getElementById('bar-cpu-label').innerText = `${percentage}%`;
     });
 
     socket.on('mem', ({
@@ -365,21 +365,21 @@
       used,
       percentage,
     }) => {
-      document.getElementById('bar-mem-inner').style.width = `${percentage} % `;
+      document.getElementById('bar-mem-inner').style.width = `${percentage}%`;
       document.getElementById('bar-mem-label').innerText = `${Number(used / 1024).toFixed(1)} GB`;
     });
 
     socket.on('temperature', ({
       temperature,
     }) => {
-      document.getElementById('bar-temperature-inner').style.width = `${temperature}% `;
+      document.getElementById('bar-temperature-inner').style.width = `${temperature}%`;
       document.getElementById('bar-temperature-label').innerText = `${temperature.toFixed(1)} ℃`;
     });
 
     socket.on('frequency', ({
       frequency,
     }) => {
-      document.getElementById('bar-frequency-inner').style.width = `${frequency / 24000000}% `;
+      document.getElementById('bar-frequency-inner').style.width = `${frequency / 24000000}%`;
       document.getElementById('bar-frequency-label').innerText = `${(frequency / 1000000000).toFixed(2)} GHz`;
     });
 
