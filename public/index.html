@@ -366,7 +366,7 @@
       percentage,
     }) => {
       document.getElementById('bar-mem-inner').style.width = `${percentage}%`;
-      document.getElementById('bar-mem-label').innerText = `${Number(used / 1024).toFixed(1)} GB`;
+      document.getElementById('bar-mem-label').innerText = `${Number(used / 1024).toFixed(1)} / ${Number(total / 1024).toFixed(1)} GB`;
     });
 
     socket.on('temperature', ({
