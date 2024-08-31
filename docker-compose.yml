@@ -6,5 +6,6 @@ services:
     restart: unless-stopped
     volumes:
       - /usr/bin/vcgencmd:/usr/bin/vcgencmd
+      - /mnt/nvme1n1p1/Config/pi-stats:/config # This is only here so `df -h` will show the correct usage
     privileged: true
     network_mode: host
