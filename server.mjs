@@ -20,28 +20,18 @@ class Server {
       console.log(`Server listening on http://0.0.0.0:${PORT}`);
     });
 
-    this.io = new SocketIOServer(this.server);
-    this.io.on('connection', () => {
-      this.networkMonitor.logNetworkStats();
-      this.storageMonitor.logStorageStats();
-      this.systemMonitor.logSystemStats();
-    });
-
     this.networkMonitor = new NetworkMonitor('eth0', 1000 / 60); // 60fps
-    this.networkMonitor.start();
     this.networkMonitor.on('stats', ({ rxSpeed, txSpeed }) => {
       // console.log(`RX Speed: ${rxSpeed.toFixed(2)} Mbps | TX Speed: ${txSpeed.toFixed(2)} Mbps`);
       this.io.emit('network', { rxSpeed, txSpeed });
     });
 
     this.storageMonitor = new StorageMonitor();
-    this.storageMonitor.start();
     this.storageMonitor.on('stats', ({ disks }) => {
       this.io.emit('storage', { disks });
     });
 
     this.systemMonitor = new SystemMonitor();
-    this.systemMonitor.start();
     this.systemMonitor.on('cpu', ({ percentage }) => {
       this.io.emit('cpu', { percentage });
     });
@@ -53,6 +43,27 @@ class Server {
     });
     this.systemMonitor.on('frequency', ({ frequency }) => {
       this.io.emit('frequency', { frequency });
+    });
+
+    this.io = new SocketIOServer(this.server);
+    this.io.on('connection', (socket) => {
+      if (this.io.of('/').sockets.size === 1) {
+        this.networkMonitor.logNetworkStats();
+        this.storageMonitor.logStorageStats();
+        this.systemMonitor.logSystemStats();
+
+        this.networkMonitor.start();
+        this.storageMonitor.start();
+        this.systemMonitor.start();
+      }
+
+      socket.on('disconnect', () => {
+        if (this.io.of('/').sockets.size === 0) {
+          this.networkMonitor.stop();
+          this.storageMonitor.stop();
+          this.systemMonitor.stop();
+        }
+      });
     });
   }
 
@@ -134,6 +145,8 @@ class NetworkMonitor extends EventEmitter {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
+
+    this.previousStats = null;
   }
 }
 
